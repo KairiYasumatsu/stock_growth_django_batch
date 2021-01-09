@@ -7,6 +7,5 @@ $git clone
 
 ## docker立ち上げ
 ＄docker-compose up -d build
-
-//secret key発行
+## secret key発行
 $python generate_secretkey_setting.py > local_settings.py
