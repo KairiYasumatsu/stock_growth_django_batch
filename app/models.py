@@ -2,6 +2,18 @@ from django.db import models
 from django.utils import timezone
 
 # Create your models here.
+class Sectors(models.Model):
+    sector_id = models.BigAutoField(primary_key=True)
+    sector_name_jan = models.TextField()
+    sector_name_en = models.CharField(max_length=255)
+    created_at = models.DateTimeField(blank=True, null=True)
+    updated_at = models.DateTimeField(blank=True, null=True)
+    deleted_at = models.DateTimeField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'sectors'
+
 class Symbols(models.Model):
     id = models.BigAutoField(primary_key=True)
     symbol = models.CharField(max_length=255)
@@ -32,17 +44,18 @@ class StockInfo(models.Model):
     exchange_time_zone = models.CharField(max_length=255)
     quote_type = models.CharField(max_length=255)
     market = models.CharField(max_length=255)
-    created_at = models.DateTimeField(blank=True, null=True, default=timezone.now)
-    updated_at = models.DateTimeField(blank=True, null=True, default=timezone.now)
+    sector_id = models.PositiveIntegerField()
+    created_at = models.DateTimeField(blank=True, null=True)
+    updated_at = models.DateTimeField(blank=True, null=True)
     deleted_at = models.DateTimeField(blank=True, null=True)
 
     class Meta:
         managed = False
         db_table = 'stock_info'
-
 class StockPrice(models.Model):
     stock_price_id = models.BigAutoField(primary_key=True)
     stock_info_id = models.PositiveIntegerField()
+    close = models.DecimalField(max_digits=9, decimal_places=2)
     previous_close = models.DecimalField(max_digits=9, decimal_places=2)
     open = models.DecimalField(max_digits=9, decimal_places=2)
     day_low = models.DecimalField(max_digits=9, decimal_places=2)
@@ -54,19 +67,19 @@ class StockPrice(models.Model):
     two_hundred_day_average = models.DecimalField(max_digits=9, decimal_places=2)
     fifty_day_average = models.DecimalField(max_digits=9, decimal_places=2)
     average_volume_10days = models.DecimalField(max_digits=15, decimal_places=0)
-    average_volume = models.DecimalField(db_column='average_volume', max_digits=15, decimal_places=0)  # Field name made lowercase.
+    average_volume = models.DecimalField(max_digits=15, decimal_places=0)
     price_to_sales_trailling_12months = models.DecimalField(max_digits=9, decimal_places=2)
     enterprise_value = models.DecimalField(max_digits=15, decimal_places=0)
     enterprise_to_revenue = models.DecimalField(max_digits=9, decimal_places=2)
     enterprise_to_ebitda = models.DecimalField(max_digits=9, decimal_places=2)
-    number_52week_change = models.DecimalField(db_column='number_52week_change', max_digits=9, decimal_places=2)  # Field renamed because it wasn't a valid Python identifier.
+    number_52week_change = models.DecimalField(max_digits=9, decimal_places=2)
     last_fiscal_year_end = models.DecimalField(max_digits=15, decimal_places=0)
     net_income_to_common = models.DecimalField(max_digits=15, decimal_places=0)
     most_recent_quarter = models.DecimalField(max_digits=15, decimal_places=0)
-    created_at = models.DateTimeField(blank=True, null=True, default=timezone.now)
-    updated_at = models.DateTimeField(blank=True, null=True, default=timezone.now)
+    created_at = models.DateTimeField(blank=True, null=True)
+    updated_at = models.DateTimeField(blank=True, null=True)
     deleted_at = models.DateTimeField(blank=True, null=True)
 
     class Meta:
         managed = False
-        db_table = 'stock_price'        
+        db_table = 'stock_price'

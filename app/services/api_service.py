@@ -1,4 +1,4 @@
-from ..models import StockPrice, Symbols
+from ..models import Sectors, StockPrice, Symbols
 from ..models import StockInfo
 from datetime import datetime
 import sys
@@ -8,6 +8,11 @@ import yfinance as yf
 class exec_api:
     def exec_basic_info_api(self):
         symbols = Symbols.objects.all().values_list('symbol', flat=True)
+        sectors = Sectors.objects.all().values('sector_id', 'sector_name_en')
+        sector_dic = {}
+        for sector in sectors:
+            sector_dic[sector['sector_id']] = sector['sector_name_en']
+
         text = ''
         for symbol in symbols:
             text = text + symbol + ','
@@ -23,6 +28,11 @@ class exec_api:
                 try:
                     ticker = getattr(tickers.tickers, symbol).info
                     print('APIから' + ticker['symbol'] + '取得確認')
+                    # sector_dicのvalueからkey(sector_id)を取得
+                    sector_id = 0
+                    if (ticker['sector'] in sector_dic.values()):
+                        sector_id = [k for k, v in sector_dic.items() if v == ticker['sector']][0]
+                    
                     stock_info = StockInfo(
                         short_name=ticker['shortName'] if 'shortName' in ticker else 'None',
                         long_name=ticker['longName'] if 'longName' in ticker else 'None',
@@ -40,7 +50,8 @@ class exec_api:
                         currency=ticker['currency'] if 'currency' in ticker else 'None',
                         exchange_time_zone=ticker['exchangeTimezoneShortName'] if 'exchangeTimezoneShortName' in ticker else 'None',
                         quote_type=ticker['quoteType'] if 'quoteType' in ticker else 'None',
-                        market=ticker['market'] if 'market' in ticker else 'None'
+                        market=ticker['market'] if 'market' in ticker else 'None',
+                        sector_id=sector_id
                     )
 
                     try:
@@ -74,6 +85,8 @@ class exec_api:
 
                 try:
                     ticker = getattr(tickers.tickers, stock['symbol']).info
+                    # 最も最近の集計の終値を取得
+                    close = getattr(tickers.tickers, stock['symbol']).history(period="min")['Close'].values.tolist()[0]
                     print('APIから' + stock['symbol'] + '取得確認')
                 except Exception as e:
                     print(e)
@@ -83,6 +96,7 @@ class exec_api:
                     StockPrice.objects.update_or_create(
                         stock_info_id=stock['stock_info_id'],
                         defaults={
+                            'close' : close if close is not None else 0,
                             'previous_close' : ticker['previousClose'] if 'previousClose' in ticker and ticker['previousClose'] is not None else 0,
                             'open' : ticker['open'] if 'open' in ticker and ticker['open'] is not None else 0,
                             'day_low' : ticker['dayLow'] if 'dayLow' in ticker and ticker['dayLow'] is not None else 0,
